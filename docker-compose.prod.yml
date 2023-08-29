@@ -5,10 +5,17 @@ services:
       dockerfile: ./Dockerfile
       target: prod
     container_name: backend
+    volumes:
+      - ./backend:/app
     networks:
       - backend
     ports:
       - 8000:8000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ec2-54-152-246-93.compute-1.amazonaws.com`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+
   db:
     image: postgres:14-alpine
     container_name: db
@@ -21,6 +28,27 @@ services:
       - backend
     ports:
       - 5432:5432
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.db.rule=Host(`db.ec2-54-152-246-93.compute-1.amazonaws.com`)"  # Subdomain or path to route to
+      - "traefik.http.routers.db.entrypoints=web"
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - backend
+    ports:
+      - "80:80"
+      - "8080:8080"
 
 networks:
   backend:

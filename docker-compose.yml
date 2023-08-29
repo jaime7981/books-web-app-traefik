@@ -34,6 +34,11 @@ services:
       - backend
     ports:
       - 5432:5432
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.db.rule=Host(`db.ec2-54-152-246-93.compute-1.amazonaws.com`)"  # Subdomain or path to route to
+      - "traefik.http.routers.db.entrypoints=web"
+
   traefik:
     image: traefik:v2.10
     container_name: traefik
@@ -42,13 +47,13 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"  # Add secure entrypoint
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"  # Enable ACME TLS challenge
-      - "--certificatesresolvers.myresolver.acme.email=jmfernandez1@miuandes.cl"  # Replace with your email
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"  # ACME storage path
+      #- "--entrypoints.websecure.address=:443"  # Add secure entrypoint
+      #- "--certificatesresolvers.myresolver.acme.tlschallenge=true"  # Enable ACME TLS challenge
+      #- "--certificatesresolvers.myresolver.acme.email=jmfernandez1@miuandes.cl"  # Replace with your email
+      #- "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"  # ACME storage path
     ports:
       - "80:80"
-      - "443:443"
+      #- "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
