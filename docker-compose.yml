@@ -1,0 +1,61 @@
+services:
+  backend:
+    build:
+      context: backend/
+      dockerfile: ./Dockerfile
+      target: dev
+    container_name: backend
+    command: flask --app books run --host 0.0.0.0 --debug
+    volumes:
+      - ./backend:/app
+    networks:
+      - backend
+    ports:
+      - 8000:5000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ec2-54-152-246-93.compute-1.amazonaws.com`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      #- "traefik.http.routers.backend.middlewares=backend-prefix"
+      #- "traefik.http.routers.backend.entrypoints=websecure"
+      #- "traefik.http.routers.backend.tls=true"
+      #- "traefik.http.routers.backend.tls.certresolver=myresolver"
+      #- "traefik.http.routers.backend.tls.domains[0].main=ec2-54-152-246-93.compute-1.amazonaws.com"  # Replace with your domain
+      #- "traefik.http.routers.backend.tls.domains[0].sans=*.ec2-54-152-246-93.compute-1.amazonaws.com"  # Replace with your domain
+  db:
+    image: postgres:14-alpine
+    container_name: db
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    networks:
+      - backend
+    ports:
+      - 5432:5432
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"  # Add secure entrypoint
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"  # Enable ACME TLS challenge
+      - "--certificatesresolvers.myresolver.acme.email=jmfernandez1@miuandes.cl"  # Replace with your email
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"  # ACME storage path
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: backend_network
