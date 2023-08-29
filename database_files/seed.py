@@ -7,8 +7,8 @@ async def main():
     conn = await asyncpg.connect(
         database="postgres",
         user="postgres",
-        password="postgres",
-        host="db",  # Use the service name defined in docker-compose.yml
+        password="Postgres7981",
+        host="group-5-p2-db.c76rpf8ygv4l.us-east-1.rds.amazonaws.com",
         port="5432"
     )
 
