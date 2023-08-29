@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: backend/
+      dockerfile: ./Dockerfile
+      target: prod
+    container_name: backend
+    volumes:
+      - ./backend:/app
+    networks:
+      - backend
+    ports:
+      - 8000:8000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ec2-54-152-246-93.compute-1.amazonaws.com`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+
+  external-db-proxy:
+    image: nginx:alpine  # Use any lightweight image
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.external-db.rule=Host(`database.your-domain.com`)"
+      - "traefik.http.routers.external-db.entrypoints=web"
+    networks:
+      - backend
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - backend
+    ports:
+      - "80:80"
+      - "8080:8080"
+
+networks:
+  backend:
+    name: backend_network
