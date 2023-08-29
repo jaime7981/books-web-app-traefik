@@ -17,4 +17,4 @@ COPY --chown=appuser:appgroup --from=build /build/dist/books-1.0.0-py3-none-any.
 RUN pip install --user /tmp/books-1.0.0-py3-none-any.whl gunicorn && \
     rm /tmp/books-1.0.0-py3-none-any.whl
 ENV PATH="/home/appuser/.local/bin:${PATH}"
-CMD [ "gunicorn", "-w", "4", "-b", "0.0.0.0", "books:create_app" ]
+CMD [ "gunicorn", "-w", "4", "-b", "0.0.0.0", "books:create_app()" ]
